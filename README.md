@@ -27,6 +27,8 @@ node jest.config.js
 
 npm run build
 
+on your webbrowser go to localhost:9000 (this is the default, unless you specified something different) to verify that it worked
+
 ### Run server
 
 #### Natively
