@@ -19,13 +19,13 @@ Run your own server on Gitpod!
 
 #### How to compile for local debugging
 
-git clone into folder
 
-in terminal, run npm install in folder
+    git clone the code
+   
+    npm install for installing all the project dependencies
+    npm install -g nodemon for installing all the project dependencies
+    npm start OR node app.js OR nodemon app.js to get the app running on local host
 
-node jest.config.js
-
-npm run build
 
 on your webbrowser go to localhost:9000 (this is the default, unless you specified something different) to verify that it worked
 
