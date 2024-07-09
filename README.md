@@ -17,6 +17,16 @@ Run your own server on Gitpod!
 
 ## Usage
 
+#### How to compile for local debugging
+
+git clone into folder
+
+in terminal, run npm install in folder
+
+node jest.config.js
+
+npm run build
+
 ### Run server
 
 #### Natively
