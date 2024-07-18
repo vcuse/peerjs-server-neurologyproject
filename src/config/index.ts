@@ -29,7 +29,7 @@ const defaultConfig: IConfig = {
 	key: "peerjs",
 	path: "/",
 	concurrent_limit: 5000,
-	allow_discovery: false,
+	allow_discovery: true,
 	proxied: false,
 	cleanup_out_msgs: 1000,
 	corsOptions: { origin: true },
