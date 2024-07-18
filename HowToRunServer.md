@@ -4,3 +4,4 @@ To run server:
 3. Go back to repository on web, copy "package.json" and "package-lock.json", and paste them into the project folder, replacing the ones you currently have
 4. Type "npm run build" in terminal
 5. Type "npm start" in terminal
+6. After any changes, repeat steps 4-5.
