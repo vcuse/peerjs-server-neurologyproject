@@ -47,18 +47,39 @@ export default ({
 
 	// Requests for logging in
 	app.use(express.json());
-	app.post("/post", (req, res) => {
-		let authenticated = false;
-		data?.forEach(element => {
-			if(element.username === req.body.username && element.password === req.body.password){
-				authenticated = true;
+	app.post("/post", async (req, res) => {
+		if(req.headers['action'] == 'login'){
+			let authenticated = false;
+			data?.forEach(element => {
+				if(element.username === req.body.username && element.password === req.body.password){
+					authenticated = true;
+				}
+			});
+			if(authenticated){
+				res.send("ACCESS GRANTED");
 			}
-		});
-		if(authenticated){
-			res.send("ACCESS GRANTED");
+			else{
+				res.send("ACCESS DENIED");
+			}
 		}
-		else{
-			res.send("ACCESS DENIED");
+		if(req.headers['action'] === 'create'){
+			let taken = false;
+			data?.forEach(element => {
+				if(element.username === req.body.username){ 
+					taken = true;
+				}
+			});
+			if(taken){
+				res.send("TAKEN");
+			}
+			else{
+				const { error } = await postgrest
+  				.from('users')
+  				.insert({ username: req.body.username, password: req.body.password, online: false })
+				if(error){
+					console.log(error);
+				}
+			}
 		}
 	});
 

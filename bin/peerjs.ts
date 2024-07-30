@@ -88,6 +88,9 @@ const opts = y
 	.boolean("allow_discovery")
 	.parseSync();
 
+
+opts.port = 9000;
+
 if (!opts.port) {
 	// .port is only not set if the PORT env var is set
 	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
