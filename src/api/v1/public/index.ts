@@ -6,12 +6,30 @@ import { PostgrestClient } from "@supabase/postgrest-js";
 const REST_URL = 'http://localhost:3000';
 const postgrest = new PostgrestClient(REST_URL);
 
+let userData: any[];
+
+async function reloadData(){
+	const { data, error } = await postgrest
+	.from('users')
+	.select()
+
+	if(error){
+		console.log(error);
+	}
+	else{
+		userData = data;
+	}
+}
+
 const { data, error } = await postgrest
 	.from('users')
 	.select()
 
 	if(error){
 		console.log(error);
+	}
+	else{
+		userData = data;
 	}
 
 export default ({
@@ -42,7 +60,8 @@ export default ({
 
 	// Get a list of all the usernames (can change this to whatever)
 	app.get("/users", (_, res: express.Response) => {
-		return res.send(data);
+		reloadData();
+		return res.send(userData);
 	});
 
 	// Requests for logging in
@@ -50,7 +69,7 @@ export default ({
 	app.post("/post", async (req, res) => {
 		if(req.headers['action'] == 'login'){
 			let authenticated = false;
-			data?.forEach(element => {
+			userData?.forEach(element => {
 				if(element.username === req.body.username && element.password === req.body.password){
 					authenticated = true;
 				}
@@ -64,23 +83,26 @@ export default ({
 		}
 		if(req.headers['action'] === 'create'){
 			let taken = false;
-			data?.forEach(element => {
+			userData?.forEach(element => {
 				if(element.username === req.body.username){ 
 					taken = true;
 				}
 			});
 			if(taken){
-				res.send("TAKEN");
+				res.send("Username is already in use.");
 			}
 			else{
 				const { error } = await postgrest
   				.from('users')
   				.insert({ username: req.body.username, password: req.body.password, online: false })
 				if(error){
+					res.send(error);
 					console.log(error);
 				}
+				res.send("Account successfully created.");
 			}
 		}
+		reloadData();
 	});
 
 	return app;

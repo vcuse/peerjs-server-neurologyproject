@@ -88,7 +88,6 @@ const opts = y
 	.boolean("allow_discovery")
 	.parseSync();
 
-
 opts.port = 9000;
 
 if (!opts.port) {
