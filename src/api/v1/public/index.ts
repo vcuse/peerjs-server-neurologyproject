@@ -102,6 +102,25 @@ export default ({
 				res.send("Account successfully created.");
 			}
 		}
+		if(req.headers['action'] === 'online'){
+			const { error } = await postgrest
+			.from('users')
+			.update({ call_id: req.body.id, online: true })
+			.eq('username', req.body.username)
+			if(error){
+				console.log(error);
+			}
+			res.send(`User ${req.body.username} has id ${req.body.id}`);
+		}
+		if(req.headers['action'] === 'offline'){
+			const { error } = await postgrest
+			.from('users')
+			.update({ call_id: null, online: false })
+			.eq('username', req.body.username)
+			if(error){
+				console.log(error);
+			}
+		}
 		reloadData();
 	});
 
