@@ -7,7 +7,21 @@ const REST_URL = 'http://localhost:3000';
 const postgrest = new PostgrestClient(REST_URL);
 
 let userData: any[];
+let onlineUsers: { username: any; id: any; }[] = [];
 
+// Load the data for the first time
+const { data, error } = await postgrest
+	.from('users')
+	.select()
+
+	if(error){
+		console.log(error);
+	}
+	else{
+		userData = data;
+	}
+
+// Function used to reload data to ensure it's up to date
 async function reloadData(){
 	const { data, error } = await postgrest
 	.from('users')
@@ -20,17 +34,6 @@ async function reloadData(){
 		userData = data;
 	}
 }
-
-const { data, error } = await postgrest
-	.from('users')
-	.select()
-
-	if(error){
-		console.log(error);
-	}
-	else{
-		userData = data;
-	}
 
 export default ({
 	config,
@@ -61,24 +64,34 @@ export default ({
 	// Get a list of all the usernames (can change this to whatever)
 	app.get("/users", (_, res: express.Response) => {
 		reloadData();
-		return res.send(userData);
+		return res.send(onlineUsers);
 	});
 
-	// Requests for logging in
+	// Requests for logging in and changing online status
 	app.use(express.json());
 	app.post("/post", async (req, res) => {
+		reloadData();
 		if(req.headers['action'] == 'login'){
-			let authenticated = false;
+			let online = false;
 			userData?.forEach(element => {
-				if(element.username === req.body.username && element.password === req.body.password){
-					authenticated = true;
+				if(element.username === req.body.username && element.online){
+					online = true;
+					res.send(`User ${element.username} is already online. No more than one active session is permitted.`);
 				}
 			});
-			if(authenticated){
-				res.send("ACCESS GRANTED");
-			}
-			else{
-				res.send("ACCESS DENIED");
+			if(!online){
+				let authenticated = false;
+				userData?.forEach(element => {
+					if(element.username === req.body.username && element.password === req.body.password){
+						authenticated = true;
+					}
+				});
+				if(authenticated){
+					res.send("ACCESS GRANTED");
+				}
+				else{
+					res.send("ACCESS DENIED");
+				}
 			}
 		}
 		if(req.headers['action'] === 'create'){
@@ -110,19 +123,28 @@ export default ({
 			if(error){
 				console.log(error);
 			}
+			onlineUsers.push({ username: req.body.username, id: req.body.id });
 			res.send(`User ${req.body.username} has id ${req.body.id}`);
 		}
-		if(req.headers['action'] === 'offline'){
-			const { error } = await postgrest
-			.from('users')
-			.update({ call_id: null, online: false })
-			.eq('username', req.body.username)
-			if(error){
-				console.log(error);
-			}
-		}
-		reloadData();
 	});
-
 	return app;
 };
+
+export async function goOffline(id: string){
+	let username;
+	onlineUsers.forEach(user => {
+		if(user.id === id){
+			username = user.username;
+		}
+	});
+
+	const { error } = await postgrest
+	.from('users')
+	.update({ call_id: null, online: false })
+	.eq('username', username)
+	if(error){
+		console.log(error);
+	}
+	const index = onlineUsers.indexOf({ username: username, id: id });
+	onlineUsers.splice(index, 1);
+}

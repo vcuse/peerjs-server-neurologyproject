@@ -8,6 +8,7 @@ import { hideBin } from "yargs/helpers";
 import { PeerServer } from "../src/index.ts";
 import type { AddressInfo } from "node:net";
 import type { CorsOptions } from "cors";
+import { goOffline } from "../src/api/v1/public/index.ts";
 
 const y = yargs(hideBin(process.argv));
 
@@ -148,4 +149,5 @@ server.on("connection", (client) => {
 
 server.on("disconnect", (client) => {
 	console.log(`Client disconnected: ${client.getId()}`);
+	goOffline(client.getId());
 });
