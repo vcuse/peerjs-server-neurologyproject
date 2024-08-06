@@ -70,8 +70,8 @@ export default ({
 	// Requests for logging in and changing online status
 	app.use(express.json());
 	app.post("/post", async (req, res) => {
-		reloadData();
-		if(req.headers['action'] == 'login'){
+		await reloadData();
+		if(req.headers['action'] === 'login'){
 			let online = false;
 			userData?.forEach(element => {
 				if(element.username === req.body.username && element.online){
