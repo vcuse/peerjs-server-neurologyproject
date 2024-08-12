@@ -85,6 +85,9 @@ export const createInstance = ({
 
         	);
 
+
+    let deviceToken = "enter your device token here";
+
 	const wss: IWebSocketServer = new WebSocketServer({
 		server,
 		realm,
