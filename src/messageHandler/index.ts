@@ -1,9 +1,10 @@
 import { MessageType } from "../enums.ts";
-import { HeartbeatHandler, TransmissionHandler } from "./handlers/index.ts";
+import { HeartbeatHandler, TransmissionHandler, IOSTransmissionHandler } from "./handlers/index.ts";
 import type { IHandlersRegistry } from "./handlersRegistry.ts";
 import { HandlersRegistry } from "./handlersRegistry.ts";
 import type { IClient } from "../models/client.ts";
 import type { IMessage } from "../models/message.ts";
+import type { IOSMessage } from "../models/iOSmessage.ts";
 import type { IRealm } from "../models/realm.ts";
 import type { Handler } from "./handler.ts";
 
@@ -18,6 +19,7 @@ export class MessageHandler implements IMessageHandler {
 	) {
 		const transmissionHandler: Handler = TransmissionHandler({ realm });
 		const heartbeatHandler: Handler = HeartbeatHandler;
+		//const iOSTransmissionHandler: Handler = IOSTransmissionHandler;
 
 		const handleTransmission: Handler = (
 			client: IClient | undefined,
@@ -30,6 +32,17 @@ export class MessageHandler implements IMessageHandler {
 				payload,
 			});
 		};
+
+        const handleIOSTransmission: Handler = (client: IClient | undefined,
+            {type, src, dst, payload}: IMessage,): boolean => {
+
+                return IOSTransmissionHandler(client, {type,
+                                                       				src,
+                                                       				dst,
+                                                       				payload,})
+                //console.log("IOSClient Message ", IMessage.MessageType)
+             }
+
 
 		const handleHeartbeat = (client: IClient | undefined, message: IMessage) =>
 			heartbeatHandler(client, message);
@@ -58,6 +71,10 @@ export class MessageHandler implements IMessageHandler {
 			MessageType.EXPIRE,
 			handleTransmission,
 		);
+		this.handlersRegistry.registerHandler(
+        			MessageType.IOSCLIENT,
+        			handleIOSTransmission,
+        );
 	}
 
 	public handle(client: IClient | undefined, message: IMessage): boolean {

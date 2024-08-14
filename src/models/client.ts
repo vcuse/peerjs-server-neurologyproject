@@ -19,6 +19,7 @@ export interface IClient {
 export class Client implements IClient {
 	private readonly id: string;
 	private readonly token: string;
+	private readonly iOSToken: string;
 	private socket: WebSocket | null = null;
 	private lastPing: number = new Date().getTime();
 

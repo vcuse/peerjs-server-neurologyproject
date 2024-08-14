@@ -15,4 +15,5 @@ export enum MessageType {
 	HEARTBEAT = "HEARTBEAT",
 	ID_TAKEN = "ID-TAKEN",
 	ERROR = "ERROR",
+	IOSCLIENT = "IOSCLIENT"
 }
