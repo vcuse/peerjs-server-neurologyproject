@@ -38,15 +38,12 @@ export const createInstance = ({
 }): void => {
 	const config = options;
 	const realm: IRealm = new Realm();
-    const certKeyPath =  "/Users/ferrufinoda2/Documents/GitHub/peerjs-server-neurologyproject/src/certs/AuthKey_9T5T6LGDWB.p8";
+    const certKeyPath =  "/Users/ferrufinoda2/Documents/GitHub/peerjs-server-neurologyproject/src/certs/cert.pem";
 
 	var apn = require('@parse/node-apn');
 	var apnOptions = {
-              token: {
-                key: certKeyPath,
-                keyId: "9T5T6LGDWB",
-                teamId: "VL7R24L9ZQ"
-              },
+              cert: "/Users/ferrufinoda2/Documents/GitHub/peerjs-server-neurologyproject/src/certs/cert.pem",
+              key: "/Users/ferrufinoda2/Documents/GitHub/peerjs-server-neurologyproject/src/certs/key.pem",
               production: false
             };
             var apnProvider = new apn.Provider(apnOptions);
