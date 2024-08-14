@@ -2,11 +2,12 @@ import { MessageType } from "../../../enums.ts";
 import type { IClient } from "../../../models/client.ts";
 import type { IMessage } from "../../../models/message.ts";
 import type { IRealm } from "../../../models/realm.ts";
+import apn from '@parse/node-apn';
 
 export const TransmissionHandler = ({
-	realm,
+	realm,  apnProvider
 }: {
-	realm: IRealm;
+	realm: IRealm, apnProvider: apn.Provider;
 }): ((client: IClient | undefined, message: IMessage) => boolean) => {
 	const handle = (client: IClient | undefined, message: IMessage) => {
 		const type = message.type;
@@ -20,8 +21,29 @@ export const TransmissionHandler = ({
 		// User is connected!
 		if (destinationClient) {
 			const socket = destinationClient.getSocket();
+
+
 			try {
 				if (socket) {
+
+                    if(destinationClient.isIOS() && type == MessageType.OFFER){
+                         var deviceToken = destinationClient.getiOSToken();
+                         var note = new apn.Notification();
+
+                            note.expiry = Math.floor(Date.now() / 1000) + 3600; // Expires 1 hour from now.
+                            note.badge = 3;
+                            note.sound = "ping.aiff";
+                            note.alert = "\uD83D\uDCE7 \u2709 You have a new message";
+                            note.payload = {'messageFrom': 'John Appleseed'};
+                            note.topic = "vcuse.Neuro-App";
+                            apnProvider.send(note, deviceToken).then( (response) => {
+                                    		// response.sent: Array of device tokens to which the notification was sent succesfully
+                                    		// response.failed: Array of objects containing the device token (`device`) and either an `error`, or a `status` and `response` from the API
+                                    console.log("Sent Notificaiton to iphone", response, JSON.stringify(response, null, 2));
+                                    });
+                    }
+
+
 					const data = JSON.stringify(message);
 
 					socket.send(data);

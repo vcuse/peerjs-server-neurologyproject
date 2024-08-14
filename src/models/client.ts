@@ -9,7 +9,13 @@ export interface IClient {
 
 	setSocket(socket: WebSocket | null): void;
 
+	setiOSToken(token: string): void;
+
 	getLastPing(): number;
+
+	getiOSToken(): string;
+
+	isIOS(): boolean;
 
 	setLastPing(lastPing: number): void;
 
@@ -19,13 +25,15 @@ export interface IClient {
 export class Client implements IClient {
 	private readonly id: string;
 	private readonly token: string;
-	private readonly iOSToken: string;
+	private iOSToken: string;
+	private ios: boolean = false;
 	private socket: WebSocket | null = null;
 	private lastPing: number = new Date().getTime();
 
 	constructor({ id, token }: { id: string; token: string }) {
 		this.id = id;
 		this.token = token;
+		this.iOSToken = "nil";
 	}
 
 	public getId(): string {
@@ -36,6 +44,9 @@ export class Client implements IClient {
 		return this.token;
 	}
 
+    public getiOSToken(): string {
+       return this.iOSToken
+    }
 	public getSocket(): WebSocket | null {
 		return this.socket;
 	}
@@ -44,6 +55,14 @@ export class Client implements IClient {
 		this.socket = socket;
 	}
 
+    public setiOSToken(token: string){
+        this.iOSToken = token;
+        this.ios = true;
+    }
+
+    public isIOS(){
+        return this.ios;
+    }
 	public getLastPing(): number {
 		return this.lastPing;
 	}

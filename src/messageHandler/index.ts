@@ -1,12 +1,14 @@
 import { MessageType } from "../enums.ts";
+import apn from '@parse/node-apn';
 import { HeartbeatHandler, TransmissionHandler, IOSTransmissionHandler } from "./handlers/index.ts";
 import type { IHandlersRegistry } from "./handlersRegistry.ts";
 import { HandlersRegistry } from "./handlersRegistry.ts";
 import type { IClient } from "../models/client.ts";
 import type { IMessage } from "../models/message.ts";
-import type { IOSMessage } from "../models/iOSmessage.ts";
 import type { IRealm } from "../models/realm.ts";
 import type { Handler } from "./handler.ts";
+
+
 
 export interface IMessageHandler {
 	handle(client: IClient | undefined, message: IMessage): boolean;
@@ -14,12 +16,12 @@ export interface IMessageHandler {
 
 export class MessageHandler implements IMessageHandler {
 	constructor(
-		realm: IRealm,
+		realm: IRealm, apnProvider: apn.Provider,
 		private readonly handlersRegistry: IHandlersRegistry = new HandlersRegistry(),
 	) {
-		const transmissionHandler: Handler = TransmissionHandler({ realm });
+		const transmissionHandler: Handler = TransmissionHandler({ realm,  apnProvider});
 		const heartbeatHandler: Handler = HeartbeatHandler;
-		//const iOSTransmissionHandler: Handler = IOSTransmissionHandler;
+		const iOSTransmissionHandler: Handler = IOSTransmissionHandler({realm, apnProvider});
 
 		const handleTransmission: Handler = (
 			client: IClient | undefined,
@@ -33,15 +35,19 @@ export class MessageHandler implements IMessageHandler {
 			});
 		};
 
-        const handleIOSTransmission: Handler = (client: IClient | undefined,
-            {type, src, dst, payload}: IMessage,): boolean => {
+        const handleIOSTransmission: Handler = (
+                                     			client: IClient | undefined,
+                                     			{ type, src, dst, payload }: IMessage,
+                                     		): boolean => {
 
-                return IOSTransmissionHandler(client, {type,
-                                                       				src,
-                                                       				dst,
-                                                       				payload,})
-                //console.log("IOSClient Message ", IMessage.MessageType)
-             }
+                return iOSTransmissionHandler(client, {
+                                             				type,
+                                             				src,
+                                             				dst,
+                                             				payload,
+                                             			});
+
+             };
 
 
 		const handleHeartbeat = (client: IClient | undefined, message: IMessage) =>
