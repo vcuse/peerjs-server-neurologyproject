@@ -13,6 +13,8 @@ export const TransmissionHandler = ({
 		const type = message.type;
 		const srcId = message.src;
 		const dstId = message.dst;
+		const payload = message.payload;
+
 
 
 
@@ -26,7 +28,7 @@ export const TransmissionHandler = ({
 			try {
 				if (socket) {
 
-                    if(destinationClient.isIOS() && type == MessageType.OFFER){
+                    if(payload != null && payload["type"] == "media" && destinationClient.isIOS() && type == MessageType.OFFER ){
                          var deviceToken = destinationClient.getiOSToken();
                          var note = new apn.Notification();
 
@@ -39,7 +41,7 @@ export const TransmissionHandler = ({
                             apnProvider.send(note, deviceToken).then( (response) => {
                                     		// response.sent: Array of device tokens to which the notification was sent succesfully
                                     		// response.failed: Array of objects containing the device token (`device`) and either an `error`, or a `status` and `response` from the API
-                                    console.log("Sent Notificaiton to iphone", response, JSON.stringify(response, null, 2));
+                                    console.log("Sent Notification to iphone", response, JSON.stringify(response, null, 2));
                                     });
                     }
 
