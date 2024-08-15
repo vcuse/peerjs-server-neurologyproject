@@ -2,38 +2,13 @@ import express from "express";
 import type { IConfig } from "../../../config/index.ts";
 import type { IRealm } from "../../../models/realm.ts";
 import { PostgrestClient } from "@supabase/postgrest-js";
+import * as jose from 'jose';
+import { TextEncoder } from "util";
 
 const REST_URL = 'http://localhost:3000';
 const postgrest = new PostgrestClient(REST_URL);
 
-let userData: any[];
 let onlineUsers: { username: any; id: any; }[] = [];
-
-// Load the data for the first time
-const { data, error } = await postgrest
-	.from('users')
-	.select()
-
-	if(error){
-		console.log(error);
-	}
-	else{
-		userData = data;
-	}
-
-// Function used to reload data to ensure it's up to date
-async function reloadData(){
-	const { data, error } = await postgrest
-	.from('users')
-	.select()
-
-	if(error){
-		console.log(error);
-	}
-	else{
-		userData = data;
-	}
-}
 
 export default ({
 	config,
@@ -61,41 +36,31 @@ export default ({
 		return res.sendStatus(401);
 	});
 
-	// Get a list of all the usernames (can change this to whatever)
-	app.get("/users", (_, res: express.Response) => {
-		reloadData();
-		return res.send(onlineUsers);
-	});
-
 	// Requests for logging in and changing online status
 	app.use(express.json());
 	app.post("/post", async (req, res) => {
-		await reloadData();
 		if(req.headers['action'] === 'login'){
-			let online = false;
-			userData?.forEach(element => {
-				if(element.username === req.body.username && element.online){
-					online = true;
-					res.send(`User ${element.username} is already online. No more than one active session is permitted.`);
-				}
-			});
-			if(!online){
-				let authenticated = false;
-				userData?.forEach(element => {
-					if(element.username === req.body.username && element.password === req.body.password){
-						authenticated = true;
-					}
-				});
-				if(authenticated){
-					res.send("ACCESS GRANTED");
-				}
-				else{
-					res.send("ACCESS DENIED");
-				}
+			const { data, error } = await postgrest.rpc('login', { username: req.body.username, pass: req.body.password })
+			if(error){
+				res.send(error.message);
+			}
+			const secret = new TextEncoder().encode('hfgfgfFHF6745%#()*%^7827GSIKJ14577848gjdfHUI7837678&%#^&GUHIUF893YH4*(^*7HFUS7548WH');
+			const { payload, protectedHeader } = await jose.jwtVerify(data.token, secret);
+			if(payload && protectedHeader){
+				res.send(data);
 			}
 		}
 		if(req.headers['action'] === 'create'){
-			let taken = false;
+			const { error } = await postgrest
+  			.from('users')
+  			.insert({ username: req.body.username, pass: req.body.password, role: 'anon' })
+			if(error){
+				res.send(error);
+			}
+			else{
+				res.send("Account successfully created.");
+			}
+			/*let taken = false;
 			userData?.forEach(element => {
 				if(element.username === req.body.username){ 
 					taken = true;
@@ -113,17 +78,13 @@ export default ({
 					console.log(error);
 				}
 				res.send("Account successfully created.");
-			}
+			}*/
 		}
 		if(req.headers['action'] === 'online'){
-			const { error } = await postgrest
-			.from('users')
-			.update({ call_id: req.body.id, online: true })
-			.eq('username', req.body.username)
+			const { error } = await postgrest.rpc('update_online_status', { name: req.body.username, status: true })
 			if(error){
 				console.log(error);
 			}
-			onlineUsers.push({ username: req.body.username, id: req.body.id });
 			res.send(`User ${req.body.username} has id ${req.body.id}`);
 		}
 	});
@@ -131,20 +92,9 @@ export default ({
 };
 
 export async function goOffline(id: string){
-	let username;
-	onlineUsers.forEach(user => {
-		if(user.id === id){
-			username = user.username;
-		}
-	});
-
-	const { error } = await postgrest
-	.from('users')
-	.update({ call_id: null, online: false })
-	.eq('username', username)
+	const username = 'adam';
+	const { error } = await postgrest.rpc('update_online_status', { name: username, status: false })
 	if(error){
 		console.log(error);
 	}
-	const index = onlineUsers.indexOf({ username: username, id: id });
-	onlineUsers.splice(index, 1);
 }
