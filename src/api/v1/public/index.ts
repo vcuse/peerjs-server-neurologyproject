@@ -38,14 +38,21 @@ export default ({
 	app.post("/post", async (req, res) => {
 		// Requests for logging in
 		if(req.headers['action'] === 'login'){
-			const { data, error } = await postgrest.rpc('login', { username: req.body.username, pass: req.body.password })
+			// First check to make sure user isn't already logged in
+			const { error } = await postgrest.rpc('check_if_user_online', { username: req.body.username })
 			if(error){
 				res.send(error.message);
 			}
-			const secret = new TextEncoder().encode('YOUR_STRONG_JWT_SECRET');
-			const { payload, protectedHeader } = await jose.jwtVerify(data.token, secret);
-			if(payload && protectedHeader){
-				res.send(data);
+			else{
+				const { data, error } = await postgrest.rpc('login', { username: req.body.username, pass: req.body.password })
+				if(error){
+					res.send(error.message);
+				}
+				const secret = new TextEncoder().encode('YOUR_STRONG_JWT_SECRET');
+				const { payload, protectedHeader } = await jose.jwtVerify(data.token, secret);
+				if(payload && protectedHeader){
+					res.send(data);
+				}
 			}
 		}
 
