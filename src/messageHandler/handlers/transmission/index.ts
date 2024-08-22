@@ -29,15 +29,16 @@ export const TransmissionHandler = ({
 				if (socket) {
 
                     if(payload != null && payload["type"] == "media" && destinationClient.isIOS() && type == MessageType.OFFER ){
+                                                            console.log("making ios notif");
+
                          var deviceToken = destinationClient.getiOSToken();
                          var note = new apn.Notification();
-
                             note.expiry = 0; // Expires 1 hour from now.
                             note.badge = 3;
                             note.sound = "ping.aiff";
                             note.alert = "\uD83D\uDCE7 \u2709 You have a new message";
                             note.payload = {'messageFrom': 'John Appleseed'};
-                            note.topic = "vcuse.Neuro-App.voip";
+                            note.topic = "vcuse.Neuro-App";
                             apnProvider.send(note, deviceToken).then( (response) => {
                                     		// response.sent: Array of device tokens to which the notification was sent succesfully
                                     		// response.failed: Array of objects containing the device token (`device`) and either an `error`, or a `status` and `response` from the API
