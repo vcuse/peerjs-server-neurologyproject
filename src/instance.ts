@@ -27,6 +27,7 @@ export interface PeerServerEvents {
 	on(event: "error", listener: (client: Error) => void): this;
 }
 
+
 export const createInstance = ({
 	app,
 	server,

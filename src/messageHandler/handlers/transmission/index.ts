@@ -38,7 +38,7 @@ export const TransmissionHandler = ({
                             note.sound = "ping.aiff";
                             note.alert = "\uD83D\uDCE7 \u2709 You have a new message";
                             note.payload = {'messageFrom': 'John Appleseed'};
-                            note.topic = "vcuse.Neuro-App";
+                            note.topic = "vcuse.Neuro-App.voip";
                             apnProvider.send(note, deviceToken).then( (response) => {
                                     		// response.sent: Array of device tokens to which the notification was sent succesfully
                                     		// response.failed: Array of objects containing the device token (`device`) and either an `error`, or a `status` and `response` from the API
