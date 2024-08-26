@@ -28,7 +28,7 @@ export const TransmissionHandler = ({
 			try {
 				if (socket) {
 
-                    if(payload != null && payload["type"] == "media" && destinationClient.isIOS() && type == MessageType.OFFER ){
+                    if(payload != null && payload["type"] == "media" && destinationClient.isIOS() && type == MessageType.OFFER){
                                                             console.log("making ios notif");
 
                          var deviceToken = destinationClient.getiOSToken();
@@ -36,8 +36,8 @@ export const TransmissionHandler = ({
                             note.expiry = 0; // Expires 1 hour from now.
                             note.badge = 3;
                             note.sound = "ping.aiff";
-                            note.alert = "\uD83D\uDCE7 \u2709 You have a new message";
-                            note.payload = {'messageFrom': 'John Appleseed'};
+                            note.alert = "\uD83D\uDCE7 \u2709 Incoming Call!";
+                            note.payload = {'messageFrom': srcId, 'dstId' : dstId, 'payload': payload, 'type': type};
                             note.topic = "vcuse.Neuro-App.voip";
                             apnProvider.send(note, deviceToken).then( (response) => {
                                     		// response.sent: Array of device tokens to which the notification was sent succesfully
