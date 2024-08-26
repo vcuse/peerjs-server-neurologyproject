@@ -81,6 +81,10 @@ export class MessageHandler implements IMessageHandler {
         			MessageType.IOSCLIENT,
         			handleIOSTransmission,
         );
+        this.handlersRegistry.registerHandler(
+                			MessageType.DISCONNECT,
+                			handleTransmission,
+        );
 	}
 
 	public handle(client: IClient | undefined, message: IMessage): boolean {

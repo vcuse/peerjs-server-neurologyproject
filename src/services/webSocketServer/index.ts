@@ -142,8 +142,13 @@ export class WebSocketServer extends EventEmitter implements IWebSocketServer {
 		// Cleanup after a socket closes.
 		socket.on("close", () => {
 			if (client.getSocket() === socket) {
-				this.realm.removeClientById(client.getId());
-				this.emit("close", client);
+                 const isIOS = client.isIOS();
+                 console.log(`Client ID ${client.getId()} isIOS: ${isIOS}`);
+                if(!isIOS){
+				    this.realm.removeClientById(client.getId());
+				    this.emit("close", client);
+				}
+
 			}
 		});
 

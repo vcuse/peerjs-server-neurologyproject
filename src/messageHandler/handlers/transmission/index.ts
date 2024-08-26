@@ -42,8 +42,8 @@ export const TransmissionHandler = ({
                             apnProvider.send(note, deviceToken).then( (response) => {
                                     		// response.sent: Array of device tokens to which the notification was sent succesfully
                                     		// response.failed: Array of objects containing the device token (`device`) and either an `error`, or a `status` and `response` from the API
-                                    console.log("Sent Notification to iphone", response, JSON.stringify(response, null, 2));
-                                    });
+                            console.log("Sent Notification to iphone", response, JSON.stringify(response, null, 2));
+                            });
                     }
 
 
@@ -61,7 +61,10 @@ export const TransmissionHandler = ({
 				if (socket) {
 					socket.close();
 				} else {
-					realm.removeClientById(destinationClient.getId());
+                    const isIOS = destinationClient.isIOS();
+                    if(!isIOS){
+					    realm.removeClientById(destinationClient.getId());
+					}
 				}
 
 				handle(client, {
@@ -73,11 +76,12 @@ export const TransmissionHandler = ({
 		} else {
 			// Wait for this client to connect/reconnect (XHR) for important
 			// messages.
-			const ignoredTypes = [MessageType.LEAVE, MessageType.EXPIRE];
+			const ignoredTypes = [MessageType.LEAVE, MessageType.EXPIRE, MessageType.DISCONNECT];
 
 			if (!ignoredTypes.includes(type) && dstId) {
 				realm.addMessageToQueue(dstId, message);
-			} else if (type === MessageType.LEAVE && !dstId) {
+			} else if (type === MessageType.LEAVE && !dstId || type === MessageType.DISCONNECT) {
+				console.log(`Client disconnected: ${srcId}`);
 				realm.removeClientById(srcId);
 			} else {
 				// Unavailable destination specified with message LEAVE or EXPIRE

@@ -23,10 +23,8 @@ export const IOSTransmissionHandler = ({
             console.log("Payload is undefined or not a string.");
         }
 
-
-
 		if(type == MessageType.IOSCLIENT){
-                    console.log("IOSClient Message ", type, src, payload);
+            console.log("IOSClient Message ", type, src, payload);
         }
         return true;
 	}

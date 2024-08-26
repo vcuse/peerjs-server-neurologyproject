@@ -64,8 +64,10 @@ export class CheckBrokenConnections {
 
 			const timeSinceLastPing = now - client.getLastPing();
 
-			if (timeSinceLastPing < aliveTimeout) continue;
-
+			if (timeSinceLastPing < aliveTimeout ) continue;
+			const isIOS = client.isIOS();
+            console.log(`Client ID ${clientId} isIOS: ${isIOS}`);
+			if (isIOS) continue;
 			try {
 				client.getSocket()?.close();
 			} finally {

@@ -47,6 +47,7 @@ export class Client implements IClient {
     public getiOSToken(): string {
        return this.iOSToken
     }
+
 	public getSocket(): WebSocket | null {
 		return this.socket;
 	}
