@@ -114,8 +114,6 @@ export const createInstance = ({
 
 	wss.on("message", (client: IClient, message: IMessage) => {
 
-
-
 		app.emit("message", client, message);
 		messageHandler.handle(client, message);
 	});

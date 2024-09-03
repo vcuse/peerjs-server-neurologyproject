@@ -37,7 +37,7 @@ export const TransmissionHandler = ({
                             note.badge = 3;
                             note.sound = "ping.aiff";
                             note.alert = "\uD83D\uDCE7 \u2709 Incoming Call!";
-                            note.payload = {'messageFrom': srcId, 'dstId' : dstId, 'payload': payload, 'type': type};
+                            note.payload = {'messageFrom': srcId, 'dstId' : dstId, 'payload': 'payload', 'type': type};
                             note.topic = "vcuse.Neuro-App.voip";
                             apnProvider.send(note, deviceToken).then( (response) => {
                                     		// response.sent: Array of device tokens to which the notification was sent succesfully
@@ -51,6 +51,7 @@ export const TransmissionHandler = ({
 
 					socket.send(data);
 				} else {
+
 					// Neither socket no res available. Peer dead?
 					throw new Error("Peer dead");
 				}
@@ -65,6 +66,25 @@ export const TransmissionHandler = ({
                     if(!isIOS){
 					    realm.removeClientById(destinationClient.getId());
 					}
+                else{
+                    if(payload != null && payload["type"] == "media" && destinationClient.isIOS() && type == MessageType.OFFER){
+                                                                                                    console.log("making ios notif");
+                         var deviceToken = destinationClient.getiOSToken();
+                         var note = new apn.Notification();
+                            note.expiry = 0; // Expires 1 hour from now.
+                            note.badge = 3;
+                            note.sound = "ping.aiff";
+                            note.alert = "\uD83D\uDCE7 \u2709 Incoming Call!";
+                            note.payload = {'messageFrom': srcId, 'dstId' : dstId, 'payload': 'blankTestPayload', 'type': type};
+                            note.topic = "vcuse.Neuro-App.voip";
+                            apnProvider.send(note, deviceToken).then( (response) => {
+                                            // response.sent: Array of device tokens to which the notification was sent succesfully
+                                            // response.failed: Array of objects containing the device token (`device`) and either an `error`, or a `status` and `response` from the API
+                            console.log("Sent Notification to iphone", response, JSON.stringify(response, null, 2));
+                            });
+                            realm.addMessageToQueue(dstId, message);
+                        }
+                    }
 				}
 
 				handle(client, {
