@@ -1,10 +1,11 @@
 To run server:
-1. Clone repository
-2. Open terminal in folder and type, "npm install"
-3. If "package.json" and "package-lock.json" changed, go back to repository on web, copy them, and paste them into the project folder, replacing the ones you currently have
-4. Type "npm run build" in terminal
-5. Type "npm start" in terminal
-6. After any changes, repeat steps 4-5.
+1. You will need to install postgresql and postgrest
+2. After installing, you need to run the command "psql -U postgres -d postgres -f file_path" in the terminal, where file_path is the file path of the database configuration file. You only need to do this once
+3. Once this is successful, you can clone the repository
+4. Open terminal in project folder and type "npm install"
+5. Type "npm run build" in terminal
+6. Type "npm start" in terminal
+7. After any changes, repeat steps 5 and 6.
 
 
 [![Build Status](https://travis-ci.org/peers/peerjs-server.png?branch=master)](https://travis-ci.org/peers/peerjs-server)
