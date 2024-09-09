@@ -1,6 +1,12 @@
 import express from "express";
 import type { IConfig } from "../../../config/index.ts";
 import type { IRealm } from "../../../models/realm.ts";
+import { PostgrestClient } from "@supabase/postgrest-js";
+import * as jose from 'jose';
+import { TextEncoder } from "util";
+
+const REST_URL = 'http://localhost:3000';
+const postgrest = new PostgrestClient(REST_URL);
 
 export default ({
 	config,
@@ -28,5 +34,55 @@ export default ({
 		return res.sendStatus(401);
 	});
 
+	app.use(express.json());
+	app.post("/post", async (req, res) => {
+		// Requests for logging in
+		if(req.headers['action'] === 'login'){
+			// First check to make sure user isn't already logged in
+			const { error } = await postgrest.rpc('check_if_user_online', { username: req.body.username })
+			if(error){
+				res.send(error.message);
+			}
+			else{
+				const { data, error } = await postgrest.rpc('login', { username: req.body.username, pass: req.body.password })
+				if(error){
+					res.send(error.message);
+				}
+				const secret = new TextEncoder().encode('YOUR_STRONG_JWT_SECRET');
+				const { payload, protectedHeader } = await jose.jwtVerify(data.token, secret);
+				if(payload && protectedHeader){
+					res.send(data);
+				}
+			}
+		}
+
+		// Requests for creating accounts
+		if(req.headers['action'] === 'create'){
+			const { error } = await postgrest.rpc('create_account', { username: req.body.username, pass: req.body.password })
+			if(error){
+				res.send('Account already in use');
+			}
+			else{
+				res.send("Account successfully created");
+			}
+		}
+		
+		// Changing online status to being online
+		if(req.headers['action'] === 'online'){
+			const { error } = await postgrest.rpc('set_user_online', { name: req.body.username, id: req.body.id })
+			if(error){
+				console.log(error);
+			}
+			res.send(`User ${req.body.username} has id ${req.body.id}`);
+		}
+	});
 	return app;
 };
+
+// Function for changing status to offline
+export async function goOffline(id: string){
+	const { error } = await postgrest.rpc('set_user_offline', { id: id })
+	if(error){
+		console.log(error);
+	}
+}

@@ -10,6 +10,12 @@ import { WebSocketServer as Server } from "ws";
 import type { Server as HttpServer } from "node:http";
 import type { Server as HttpsServer } from "node:https";
 import { IMessage } from "../../models/message.js";
+import { PostgrestClient } from "@supabase/postgrest-js";
+import * as jose from 'jose';
+import { TextEncoder } from "util";
+
+const REST_URL = 'http://localhost:3000';
+const postgrest = new PostgrestClient(REST_URL);
 
 export interface IWebSocketServer extends EventEmitter {
 	readonly path: string;
@@ -153,14 +159,26 @@ export class WebSocketServer extends EventEmitter implements IWebSocketServer {
 		});
 
 		// Handle messages from peers.
-		socket.on("message", (data) => {
+		socket.on("message", async (messageData) => {
 			try {
 				// eslint-disable-next-line @typescript-eslint/no-base-to-string
-				const message = JSON.parse(data.toString()) as Writable<IMessage>;
+				const message = JSON.parse(messageData.toString()) as Writable<IMessage>;
 
-				message.src = client.getId();
-
-				this.emit("message", client, message);
+				if(message.type !== 'HEARTBEAT'){
+					const { data, error } = await postgrest.rpc('login', { username: "adminuser", pass: '123' })
+					if(error){
+						console.log(error.message);
+					}
+					else{
+						const secret = new TextEncoder().encode('YOUR_STRONG_JWT_SECRET');
+						const { payload, protectedHeader } = await jose.jwtVerify(data.token, secret);
+						if(payload && protectedHeader){
+							message.src = client.getId();
+				
+							this.emit("message", client, message);
+						}
+					}
+				}
 			} catch (e) {
 				this.emit("error", e);
 			}

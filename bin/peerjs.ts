@@ -8,6 +8,7 @@ import { hideBin } from "yargs/helpers";
 import { PeerServer } from "../src/index.ts";
 import type { AddressInfo } from "node:net";
 import type { CorsOptions } from "cors";
+import { goOffline } from "../src/api/v1/public/index.ts";
 
 const y = yargs(hideBin(process.argv));
 
@@ -88,6 +89,8 @@ const opts = y
 	.boolean("allow_discovery")
 	.parseSync();
 
+opts.port = 9000;
+
 if (!opts.port) {
 	// .port is only not set if the PORT env var is set
 	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -146,4 +149,5 @@ server.on("connection", (client) => {
 
 server.on("disconnect", (client) => {
 	console.log(`Client disconnected: ${client.getId()}`);
+	goOffline(client.getId());
 });
