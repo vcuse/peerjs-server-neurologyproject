@@ -1,11 +1,12 @@
 To run server:
 1. You will need to install postgresql and postgrest
-2. After installing, you need to run the command "psql -U postgres -d postgres -f file_path" in the terminal, where file_path is the file path of the database configuration file. You only need to do this once
+2. After installing, you need to run the command "psql -U postgres -d postgres -f file_path" in the terminal, where file_path is the file path of the database file. You only need to do this once
 3. Once this is successful, you can clone the repository
 4. Open terminal in project folder and type "npm install"
 5. Type "npm run build" in terminal
-6. Type "npm start" in terminal
-7. After any changes, repeat steps 5 and 6.
+6. Before starting the sever, you need to run the database server by typing "postgrest file_path" where file_path is the path of the .config file
+7. Type "npm start" in terminal
+8. After any changes, repeat steps 5 and 6.
 
 
 [![Build Status](https://travis-ci.org/peers/peerjs-server.png?branch=master)](https://travis-ci.org/peers/peerjs-server)
