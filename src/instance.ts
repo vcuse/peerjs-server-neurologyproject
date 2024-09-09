@@ -1,4 +1,5 @@
 import type express from "express";
+
 import type { Server as HttpServer } from "node:http";
 import type { Server as HttpsServer } from "node:https";
 import path from "node:path";
@@ -26,6 +27,7 @@ export interface PeerServerEvents {
 	on(event: "error", listener: (client: Error) => void): this;
 }
 
+
 export const createInstance = ({
 	app,
 	server,
@@ -37,7 +39,23 @@ export const createInstance = ({
 }): void => {
 	const config = options;
 	const realm: IRealm = new Realm();
-	const messageHandler = new MessageHandler(realm);
+
+
+	var apn = require('@parse/node-apn');
+	var apnOptions = {
+              cert: "src/certs/cert.pem",
+              key: "src/certs/key.pem",
+              production: false
+            };
+            var apnProvider = new apn.Provider(apnOptions);
+
+
+	const messageHandler = new MessageHandler(realm, apnProvider);
+
+
+
+
+
 
 	const api = Api({ config, realm, corsOptions: options.corsOptions });
 	const messagesExpire: IMessagesExpire = new MessagesExpire({
@@ -53,7 +71,8 @@ export const createInstance = ({
 		},
 	});
 
-	app.use(options.path, api);
+
+
 
 	//use mountpath for WS server
 	const customConfig = {
@@ -61,11 +80,22 @@ export const createInstance = ({
 		path: path.posix.join(app.path(), options.path, "/"),
 	};
 
+
+
+    app.use(options.path, api);
+
+
+
+
+
+
 	const wss: IWebSocketServer = new WebSocketServer({
 		server,
 		realm,
 		config: customConfig,
 	});
+
+
 
 	wss.on("connection", (client: IClient) => {
 		const messageQueue = realm.getMessageQueueById(client.getId());
@@ -83,6 +113,7 @@ export const createInstance = ({
 	});
 
 	wss.on("message", (client: IClient, message: IMessage) => {
+
 		app.emit("message", client, message);
 		messageHandler.handle(client, message);
 	});

@@ -1,5 +1,6 @@
 import { MessageType } from "../enums.ts";
-import { HeartbeatHandler, TransmissionHandler } from "./handlers/index.ts";
+import apn from '@parse/node-apn';
+import { HeartbeatHandler, TransmissionHandler, IOSTransmissionHandler } from "./handlers/index.ts";
 import type { IHandlersRegistry } from "./handlersRegistry.ts";
 import { HandlersRegistry } from "./handlersRegistry.ts";
 import type { IClient } from "../models/client.ts";
@@ -7,17 +8,20 @@ import type { IMessage } from "../models/message.ts";
 import type { IRealm } from "../models/realm.ts";
 import type { Handler } from "./handler.ts";
 
+
+
 export interface IMessageHandler {
 	handle(client: IClient | undefined, message: IMessage): boolean;
 }
 
 export class MessageHandler implements IMessageHandler {
 	constructor(
-		realm: IRealm,
+		realm: IRealm, apnProvider: apn.Provider,
 		private readonly handlersRegistry: IHandlersRegistry = new HandlersRegistry(),
 	) {
-		const transmissionHandler: Handler = TransmissionHandler({ realm });
+		const transmissionHandler: Handler = TransmissionHandler({ realm,  apnProvider});
 		const heartbeatHandler: Handler = HeartbeatHandler;
+		const iOSTransmissionHandler: Handler = IOSTransmissionHandler({realm, apnProvider});
 
 		const handleTransmission: Handler = (
 			client: IClient | undefined,
@@ -30,6 +34,21 @@ export class MessageHandler implements IMessageHandler {
 				payload,
 			});
 		};
+
+        const handleIOSTransmission: Handler = (
+                                     			client: IClient | undefined,
+                                     			{ type, src, dst, payload }: IMessage,
+                                     		): boolean => {
+
+                return iOSTransmissionHandler(client, {
+                                             				type,
+                                             				src,
+                                             				dst,
+                                             				payload,
+                                             			});
+
+             };
+
 
 		const handleHeartbeat = (client: IClient | undefined, message: IMessage) =>
 			heartbeatHandler(client, message);
@@ -58,6 +77,14 @@ export class MessageHandler implements IMessageHandler {
 			MessageType.EXPIRE,
 			handleTransmission,
 		);
+		this.handlersRegistry.registerHandler(
+        			MessageType.IOSCLIENT,
+        			handleIOSTransmission,
+        );
+        this.handlersRegistry.registerHandler(
+                			MessageType.DISCONNECT,
+                			handleTransmission,
+        );
 	}
 
 	public handle(client: IClient | undefined, message: IMessage): boolean {

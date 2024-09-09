@@ -26,6 +26,7 @@ export interface IRealm {
 
 export class Realm implements IRealm {
 	private readonly clients = new Map<string, IClient>();
+	private readonly iosClients = new Map<string, IClient>();
 	private readonly messageQueues = new Map<string, IMessageQueue>();
 
 	public getClientsIds(): string[] {
@@ -43,6 +44,11 @@ export class Realm implements IRealm {
 	public setClient(client: IClient, id: string): void {
 		this.clients.set(id, client);
 	}
+
+    //used to add an iOS client to the list of iOS Clients
+    public setIOSClient(client: IClient, id: string): void{
+        this.iosClients.set(id, client);
+    }
 
 	public removeClientById(id: string): boolean {
 		const client = this.getClientById(id);

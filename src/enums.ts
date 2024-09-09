@@ -8,6 +8,7 @@ export enum Errors {
 export enum MessageType {
 	OPEN = "OPEN",
 	LEAVE = "LEAVE",
+	DISCONNECT = "DISCONNECT", //used to dc from server
 	CANDIDATE = "CANDIDATE",
 	OFFER = "OFFER",
 	ANSWER = "ANSWER",
@@ -15,4 +16,5 @@ export enum MessageType {
 	HEARTBEAT = "HEARTBEAT",
 	ID_TAKEN = "ID-TAKEN",
 	ERROR = "ERROR",
+	IOSCLIENT = "IOSCLIENT"
 }
