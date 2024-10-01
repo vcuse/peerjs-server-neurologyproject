@@ -4,9 +4,16 @@ import type { IRealm } from "../../../models/realm.ts";
 import { PostgrestClient } from "@supabase/postgrest-js";
 import * as jose from 'jose';
 import { TextEncoder } from "util";
+import { exit } from "process";
 
 const REST_URL = 'http://localhost:3000';
 const postgrest = new PostgrestClient(REST_URL);
+
+const { error } = await postgrest.rpc('login', { username: "adminuser", pass: '123' })
+		if(error){
+			console.log(error);
+			exit(1);
+		}
 
 export default ({
 	config,
