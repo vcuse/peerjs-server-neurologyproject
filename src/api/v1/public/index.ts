@@ -6,14 +6,35 @@ import * as jose from 'jose';
 import { TextEncoder } from "util";
 import { exit } from "process";
 
-const REST_URL = 'http://localhost:3000';
+import pg from "pg";
+
+// Create a new pool (connection pool)
+const client = new pg.Client({
+	user: 'postgres',
+	host: '34.73.142.252',
+	database: 'postgres',
+	password: 'root123',
+	port: 5432,
+});
+
+client.connect();
+client.query("SELECT * FROM basic_auth.users", (err, res) => {
+	if(!err){
+		console.log(res.rows);
+	}
+	else{
+		console.log(err.message);
+	}
+});
+
+/*const REST_URL = 'http://localhost:3000';
 const postgrest = new PostgrestClient(REST_URL);
 
 const { error } = await postgrest.rpc('login', { username: "adminuser", pass: '123' })
 		if(error){
 			console.log(error);
 			exit(1);
-		}
+		}*/
 
 export default ({
 	config,
