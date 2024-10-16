@@ -170,7 +170,6 @@ export class WebSocketServer extends EventEmitter implements IWebSocketServer {
 						console.log(error.message);
 					}
 					else{
-						const secret = new TextEncoder().encode('YOUR_STRONG_JWT_SECRET');
 						const { payload, protectedHeader } = await jose.jwtVerify(data.token, secret);
 						if(payload && protectedHeader){
 							message.src = client.getId();
