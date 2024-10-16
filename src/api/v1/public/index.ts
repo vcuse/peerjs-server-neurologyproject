@@ -1,10 +1,8 @@
 import express from "express";
 import type { IConfig } from "../../../config/index.ts";
 import type { IRealm } from "../../../models/realm.ts";
-import { PostgrestClient } from "@supabase/postgrest-js";
 import * as jose from 'jose';
 import { TextEncoder } from "util";
-import { exit } from "process";
 
 import pg from "pg";
 
@@ -18,23 +16,6 @@ const client = new pg.Client({
 });
 
 client.connect();
-client.query("SELECT * FROM basic_auth.users", (err, res) => {
-	if(!err){
-		console.log(res.rows);
-	}
-	else{
-		console.log(err.message);
-	}
-});
-
-/*const REST_URL = 'http://localhost:3000';
-const postgrest = new PostgrestClient(REST_URL);
-
-const { error } = await postgrest.rpc('login', { username: "adminuser", pass: '123' })
-		if(error){
-			console.log(error);
-			exit(1);
-		}*/
 
 export default ({
 	config,
@@ -67,40 +48,31 @@ export default ({
 		// Requests for logging in
 		if(req.headers['action'] === 'login'){
 			// First check to make sure user isn't already logged in
-			const { error } = await postgrest.rpc('check_if_user_online', { username: req.body.username })
-			if(error){
-				res.send(error.message);
-			}
-			else{
-				const { data, error } = await postgrest.rpc('login', { username: req.body.username, pass: req.body.password })
-				if(error){
-					res.send(error.message);
-				}
-				const secret = new TextEncoder().encode('YOUR_STRONG_JWT_SECRET');
-				const { payload, protectedHeader } = await jose.jwtVerify(data.token, secret);
-				if(payload && protectedHeader){
-					res.send(data);
-				}
+			await client.query('SELECT check_if_user_online($1)', [req.body.username]);
+
+			const result = await client.query('SELECT login($1, $2)', [req.body.username, req.body.password]);
+
+			const secret = new TextEncoder().encode('YOUR_STRONG_JWT_SECRET');
+			const { payload, protectedHeader } = await jose.jwtVerify(result.rows[0].login, secret);
+			if(payload && protectedHeader){
+				res.send(result);
 			}
 		}
 
 		// Requests for creating accounts
 		if(req.headers['action'] === 'create'){
-			const { error } = await postgrest.rpc('create_account', { username: req.body.username, pass: req.body.password })
-			if(error){
+			let result;
+			try{
+				result = await client.query('SELECT create_account($1, $2)', [req.body.username, req.body.password]);
+			} catch(error){
 				res.send('Account already in use');
 			}
-			else{
 				res.send("Account successfully created");
-			}
 		}
 		
 		// Changing online status to being online
 		if(req.headers['action'] === 'online'){
-			const { error } = await postgrest.rpc('set_user_online', { name: req.body.username, id: req.body.id })
-			if(error){
-				console.log(error);
-			}
+			await client.query('SELECT set_user_online($1, $2)', [req.body.username, req.body.id])
 			res.send(`User ${req.body.username} has id ${req.body.id}`);
 		}
 	});
@@ -109,8 +81,9 @@ export default ({
 
 // Function for changing status to offline
 export async function goOffline(id: string){
-	const { error } = await postgrest.rpc('set_user_offline', { id: id })
-	if(error){
+	try{
+		await client.query('SELECT set_user_offline($1)', [id])
+	} catch(error){
 		console.log(error);
 	}
 }
