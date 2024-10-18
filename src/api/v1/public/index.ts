@@ -3,11 +3,10 @@ import type { IConfig } from "../../../config/index.ts";
 import type { IRealm } from "../../../models/realm.ts";
 import * as jose from 'jose';
 import { TextEncoder } from "util";
-
 import pg from "pg";
 
 // Create a new pool (connection pool)
-const client = new pg.Client({
+const pgClient = new pg.Client({
 	user: 'postgres',
 	host: '34.73.142.252',
 	database: 'postgres',
@@ -15,7 +14,7 @@ const client = new pg.Client({
 	port: 5432,
 });
 
-client.connect();
+await pgClient.connect();
 
 export default ({
 	config,
@@ -51,7 +50,7 @@ export default ({
 			let result;
 			let loggedIn = false;
 			try{
-				result = await client.query('SELECT check_if_user_online($1)', [req.body.username]);
+				result = await pgClient.query('SELECT check_if_user_online($1)', [req.body.username]);
 			} catch(error){
 				loggedIn = true;
 				res.send("No more than one active session per user is allowed");
@@ -61,7 +60,7 @@ export default ({
 			if(!loggedIn){
 				let authenticated = true;
 				try{
-					result = await client.query('SELECT login($1, $2)', [req.body.username, req.body.password]);
+					result = await pgClient.query('SELECT login($1, $2)', [req.body.username, req.body.password]);
 				} catch(error){
 					authenticated = false;
 					res.send("Invalid username or password");
@@ -81,7 +80,7 @@ export default ({
 			let result;
 			let accountUsed = false;
 			try{
-				result = await client.query('SELECT create_account($1, $2)', [req.body.username, req.body.password]);
+				result = await pgClient.query('SELECT create_account($1, $2)', [req.body.username, req.body.password]);
 			} catch(error){
 				accountUsed = true;
 				res.send('Account already in use');
@@ -93,7 +92,7 @@ export default ({
 		
 		// Changing online status to being online
 		if(req.headers['action'] === 'online'){
-			await client.query('SELECT set_user_online($1, $2)', [req.body.username, req.body.id])
+			await pgClient.query('SELECT set_user_online($1, $2)', [req.body.username, req.body.id])
 			res.send(`User ${req.body.username} has id ${req.body.id}`);
 		}
 	});
@@ -103,7 +102,7 @@ export default ({
 // Function for changing status to offline
 export async function goOffline(id: string){
 	try{
-		await client.query('SELECT set_user_offline($1)', [id])
+		await pgClient.query('SELECT set_user_offline($1)', [id])
 	} catch(error){
 		console.log(error);
 	}

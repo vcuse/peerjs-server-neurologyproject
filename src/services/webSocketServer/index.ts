@@ -10,12 +10,20 @@ import { WebSocketServer as Server } from "ws";
 import type { Server as HttpServer } from "node:http";
 import type { Server as HttpsServer } from "node:https";
 import { IMessage } from "../../models/message.js";
-import { PostgrestClient } from "@supabase/postgrest-js";
 import * as jose from 'jose';
 import { TextEncoder } from "util";
+import pg from "pg";
 
-const REST_URL = 'http://localhost:3000';
-const postgrest = new PostgrestClient(REST_URL);
+// Create a new pool (connection pool)
+const pgClient = new pg.Client({
+	user: 'postgres',
+	host: '34.73.142.252',
+	database: 'postgres',
+	password: 'root123',
+	port: 5432,
+});
+
+pgClient.connect();
 
 export interface IWebSocketServer extends EventEmitter {
 	readonly path: string;
@@ -164,21 +172,23 @@ export class WebSocketServer extends EventEmitter implements IWebSocketServer {
 				// eslint-disable-next-line @typescript-eslint/no-base-to-string
 				const message = JSON.parse(messageData.toString()) as Writable<IMessage>;
 
+				let result;
 				if(message.type !== 'HEARTBEAT'){
-					const { data, error } = await postgrest.rpc('login', { username: "adminuser", pass: '123' })
-					if(error){
-						console.log(error.message);
+					try{
+						result = await pgClient.query('SELECT login($1, $2)', ["adminuser",  '123']);
+					} catch(error){
+						console.log(error);
 					}
-					else{
-						const { payload, protectedHeader } = await jose.jwtVerify(data.token, secret);
-						if(payload && protectedHeader){
-							message.src = client.getId();
-				
-							this.emit("message", client, message);
-						}
+					const secret = new TextEncoder().encode('YOUR_STRONG_JWT_SECRET');
+					const { payload, protectedHeader } = await jose.jwtVerify(result.rows[0].login, secret);
+					if(payload && protectedHeader){
+						message.src = client.getId();
+			
+						this.emit("message", client, message);
 					}
 				}
-			} catch (e) {
+			}
+			catch (e) {
 				this.emit("error", e);
 			}
 		});
