@@ -48,26 +48,47 @@ export default ({
 		// Requests for logging in
 		if(req.headers['action'] === 'login'){
 			// First check to make sure user isn't already logged in
-			await client.query('SELECT check_if_user_online($1)', [req.body.username]);
+			let result;
+			let loggedIn = false;
+			try{
+				result = await client.query('SELECT check_if_user_online($1)', [req.body.username]);
+			} catch(error){
+				loggedIn = true;
+				res.send("No more than one active session per user is allowed");
+				result = null;
+			}
 
-			const result = await client.query('SELECT login($1, $2)', [req.body.username, req.body.password]);
-
-			const secret = new TextEncoder().encode('YOUR_STRONG_JWT_SECRET');
-			const { payload, protectedHeader } = await jose.jwtVerify(result.rows[0].login, secret);
-			if(payload && protectedHeader){
-				res.send(result);
+			if(!loggedIn){
+				let authenticated = true;
+				try{
+					result = await client.query('SELECT login($1, $2)', [req.body.username, req.body.password]);
+				} catch(error){
+					authenticated = false;
+					res.send("Invalid username or password");
+				}
+				if(authenticated){
+					const secret = new TextEncoder().encode('YOUR_STRONG_JWT_SECRET');
+					const { payload, protectedHeader } = await jose.jwtVerify(result.rows[0].login, secret);
+					if(payload && protectedHeader){
+						res.send(result);
+					}
+			}
 			}
 		}
 
 		// Requests for creating accounts
 		if(req.headers['action'] === 'create'){
 			let result;
+			let accountUsed = false;
 			try{
 				result = await client.query('SELECT create_account($1, $2)', [req.body.username, req.body.password]);
 			} catch(error){
+				accountUsed = true;
 				res.send('Account already in use');
 			}
+			if(!accountUsed){
 				res.send("Account successfully created");
+			}
 		}
 		
 		// Changing online status to being online
