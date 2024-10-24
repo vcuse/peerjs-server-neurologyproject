@@ -32,7 +32,7 @@ const defaultConfig: IConfig = {
 	allow_discovery: true,
 	proxied: false,
 	cleanup_out_msgs: 1000,
-	corsOptions: { origin: true },
+	corsOptions: { origin: true, methods: ["GET", "POST"] },
 };
 
 export default defaultConfig;

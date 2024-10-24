@@ -1,19 +1,20 @@
 import express from "express";
 import type { IConfig } from "../../../config/index.ts";
 import type { IRealm } from "../../../models/realm.ts";
-import { PostgrestClient } from "@supabase/postgrest-js";
 import * as jose from 'jose';
 import { TextEncoder } from "util";
-import { exit } from "process";
+import pg from "pg";
 
-const REST_URL = 'http://localhost:3000';
-const postgrest = new PostgrestClient(REST_URL);
+// Create a new pool (connection pool)
+const pgClient = new pg.Client({
+	user: 'postgres',
+	host: '34.73.142.252',
+	database: 'postgres',
+	password: 'root123',
+	port: 5432,
+});
 
-const { error } = await postgrest.rpc('login', { username: "adminuser", pass: '123' })
-		if(error){
-			console.log(error);
-			exit(1);
-		}
+await pgClient.connect();
 
 export default ({
 	config,
@@ -43,43 +44,60 @@ export default ({
 
 	app.use(express.json());
 	app.post("/post", async (req, res) => {
+		res.setHeader('Access-Control-Allow-Origin', '*');
+		res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+		res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 		// Requests for logging in
 		if(req.headers['action'] === 'login'){
 			// First check to make sure user isn't already logged in
-			const { error } = await postgrest.rpc('check_if_user_online', { username: req.body.username })
-			if(error){
-				res.send(error.message);
+			let result;
+			let loggedIn = false;
+			
+			try{
+				result = await pgClient.query('SELECT check_if_user_online($1)', [req.body.username]);
+			} catch(error){
+				loggedIn = true;
+				res.send("No more than one active session per user is allowed");
+				result = null;
 			}
-			else{
-				const { data, error } = await postgrest.rpc('login', { username: req.body.username, pass: req.body.password })
-				if(error){
-					res.send(error.message);
+
+			if(!loggedIn){
+				let authenticated = true;
+				try{
+					result = await pgClient.query('SELECT login($1, $2)', [req.body.username, req.body.password]);
+				} catch(error){
+					authenticated = false;
+	
+					res.send("Invalid username or password");
 				}
-				const secret = new TextEncoder().encode('YOUR_STRONG_JWT_SECRET');
-				const { payload, protectedHeader } = await jose.jwtVerify(data.token, secret);
-				if(payload && protectedHeader){
-					res.send(data);
-				}
+				if(authenticated){
+					const secret = new TextEncoder().encode('hfgfgfFHF6745%#()*%^7827GSIKJ14577848gjdfHUI7837678&%#^&GUHIUF893YH4*(^*7HFUS7548WH');
+					const { payload, protectedHeader } = await jose.jwtVerify(result.rows[0].login, secret);
+					if(payload && protectedHeader){
+						res.send(result);
+					}
+			}
 			}
 		}
 
 		// Requests for creating accounts
 		if(req.headers['action'] === 'create'){
-			const { error } = await postgrest.rpc('create_account', { username: req.body.username, pass: req.body.password })
-			if(error){
+			let result;
+			let accountUsed = false;
+			try{
+				result = await pgClient.query('SELECT create_account($1, $2)', [req.body.username, req.body.password]);
+			} catch(error){
+				accountUsed = true;
 				res.send('Account already in use');
 			}
-			else{
+			if(!accountUsed){
 				res.send("Account successfully created");
 			}
 		}
 		
 		// Changing online status to being online
 		if(req.headers['action'] === 'online'){
-			const { error } = await postgrest.rpc('set_user_online', { name: req.body.username, id: req.body.id })
-			if(error){
-				console.log(error);
-			}
+			await pgClient.query('SELECT set_user_online($1, $2)', [req.body.username, req.body.id])
 			res.send(`User ${req.body.username} has id ${req.body.id}`);
 		}
 	});
@@ -88,8 +106,9 @@ export default ({
 
 // Function for changing status to offline
 export async function goOffline(id: string){
-	const { error } = await postgrest.rpc('set_user_offline', { id: id })
-	if(error){
+	try{
+		await pgClient.query('SELECT set_user_offline($1)', [id])
+	} catch(error){
 		console.log(error);
 	}
 }

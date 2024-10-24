@@ -89,7 +89,7 @@ const opts = y
 	.boolean("allow_discovery")
 	.parseSync();
 
-opts.port = 9000;
+
 
 if (!opts.port) {
 	// .port is only not set if the PORT env var is set
@@ -99,6 +99,8 @@ if (!opts.port) {
 if (opts.cors) {
 	opts["corsOptions"] = {
 		origin: opts.cors,
+		methods: ["GET", "POST"]
+		
 	} satisfies CorsOptions;
 }
 process.on("uncaughtException", function (e) {
