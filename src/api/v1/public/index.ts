@@ -44,11 +44,15 @@ export default ({
 
 	app.use(express.json());
 	app.post("/post", async (req, res) => {
+		res.setHeader('Access-Control-Allow-Origin', '*');
+		res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+		res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 		// Requests for logging in
 		if(req.headers['action'] === 'login'){
 			// First check to make sure user isn't already logged in
 			let result;
 			let loggedIn = false;
+			
 			try{
 				result = await pgClient.query('SELECT check_if_user_online($1)', [req.body.username]);
 			} catch(error){
@@ -63,10 +67,11 @@ export default ({
 					result = await pgClient.query('SELECT login($1, $2)', [req.body.username, req.body.password]);
 				} catch(error){
 					authenticated = false;
+	
 					res.send("Invalid username or password");
 				}
 				if(authenticated){
-					const secret = new TextEncoder().encode('YOUR_STRONG_JWT_SECRET');
+					const secret = new TextEncoder().encode('hfgfgfFHF6745%#()*%^7827GSIKJ14577848gjdfHUI7837678&%#^&GUHIUF893YH4*(^*7HFUS7548WH');
 					const { payload, protectedHeader } = await jose.jwtVerify(result.rows[0].login, secret);
 					if(payload && protectedHeader){
 						res.send(result);

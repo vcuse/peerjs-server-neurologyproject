@@ -179,7 +179,7 @@ export class WebSocketServer extends EventEmitter implements IWebSocketServer {
 					} catch(error){
 						console.log(error);
 					}
-					const secret = new TextEncoder().encode('YOUR_STRONG_JWT_SECRET');
+					const secret = new TextEncoder().encode("hfgfgfFHF6745%#()*%^7827GSIKJ14577848gjdfHUI7837678&%#^&GUHIUF893YH4*(^*7HFUS7548WH");
 					const { payload, protectedHeader } = await jose.jwtVerify(result.rows[0].login, secret);
 					if(payload && protectedHeader){
 						message.src = client.getId();
